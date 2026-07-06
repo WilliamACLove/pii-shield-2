@@ -93,11 +93,14 @@ auditors — logging-only hooks that nobody reads are the hook-shaped version of
 
 *Enforced tomorrow by:* the harness executes hooks mechanically; no model discretion involved.
 
-## Phase 3 — Agents: a minimal team, not a cast of thirty
+## Phase 3 — Agents: full roster, three-agent core first
 
-For a single Go repo with strong CI, most of the suggested 9-agent roster is overhead.
-Three subagent definitions in `.claude/agents/`, each with a strict contract
-(mission, scope, output format, required evidence):
+All agents live in `.claude/agents/`, each with a strict contract (mission, scope,
+output format, required evidence). The core three are built first because every task
+flows through them; the rest of the roster is defined alongside so it is available on
+demand instead of being reinvented in chat.
+
+**Core (build first):**
 
 - **builder** — implements a bounded change in one module; contract requires naming the
   files touched and the exact verification commands run with their output tails.
@@ -108,18 +111,48 @@ Three subagent definitions in `.claude/agents/`, each with a strict contract
   a "passing" change that weakens redaction is the worst failure mode), doc drift
   (README/CONFIGURATION/KNOWN_LIMITATIONS claims vs. behavior).
 
-Explicitly not created: chief-operator (that is the main session's job; the harness
-already provides orchestration), system-fixer / eval-designer / improvement-analyst /
-context-librarian / research-scout (folded into normal sessions until recurring need is
-demonstrated in the log — see Phase 5).
+**Extended roster (defined in the same pass, invoked as needed):**
 
-Model routing rule of thumb, recorded in `CLAUDE.md`: strongest available model for
-main-session orchestration and critic passes; mid-tier for builder tasks; small/fast
-for mechanical sweeps (gofmt fixes, doc greps). Never hardcode model IDs in agent
-frontmatter beyond tier hints — availability changes.
+- **chief-operator** — main-session operator profile for long orchestration runs
+  (`claude --agent chief-operator`). Short core prompt: understand intent, split into
+  microtasks, dispatch to the agents below, decide from digests, write handoffs.
+  Explicit model-routing and memory rules; no instruction museum.
+- **system-fixer** — bounded repairs to the `.claude/` system itself (agents, skills,
+  hooks, settings). Must commit the pre-repair state before touching anything (see
+  Backups below) and re-run the affected hook/agent as evidence of the fix.
+- **eval-designer** — converts a recurring `notes/agent-log.md` entry into an eval
+  fixture in `.claude/evals/`.
+- **improvement-analyst** — reads the operational log and proposes the next system
+  patch, always naming the enforcing file.
+- **context-librarian** — prunes and refreshes `CLAUDE.md`, `operator/AGENTS.md`, and
+  doc pointers; keeps loaded context lean and current.
+- **research-scout** — read-only research (Go/k8s/golangci releases, CVEs affecting
+  dependencies) returning short cited digests, never raw dumps.
 
-*Enforced tomorrow by:* `.claude/agents/*.md` frontmatter (tools, model tier) is applied
-by the harness; contracts live in the agent prompt files, not in chat.
+**Model routing with backup routing**, recorded in `CLAUDE.md` and in each agent's
+frontmatter as tier hints (never hardcoded model IDs — availability changes):
+strongest available model for orchestration and critic passes; mid-tier for builder
+tasks; small/fast for mechanical sweeps (gofmt fixes, doc greps). Every agent also
+names a **fallback tier**, so the team degrades gracefully instead of stalling when
+the preferred model is unavailable (e.g. critic: strongest → mid-tier; builder:
+mid-tier → small).
+
+**Backups** — two rules, both enforced by files, so no repair or risky change is
+unrecoverable:
+
+- *Working-state backups:* git is the backup medium. A `checkpoint` hook (extends
+  Phase 2) requires a WIP commit on the working branch before multi-file refactors,
+  generated-file regeneration (`make manifests generate`), or any scripted bulk edit —
+  rollback is then `git reset`, not archaeology.
+- *System backups:* `.claude/` is committed to the repo, so the agent system itself is
+  versioned and revertible; the system-fixer contract requires a commit before and
+  after each repair, and the pre-compact handoff writer (Phase 2) snapshots session
+  state to `notes/agent-log.md` so a compaction or dropped session never loses the
+  thread.
+
+*Enforced tomorrow by:* `.claude/agents/*.md` frontmatter (tools, model tier, fallback
+tier) is applied by the harness; contracts live in the agent prompt files, not in chat;
+the checkpoint rule is a hook, not a habit.
 
 ## Phase 4 — Skills: encode the workflows that repeat
 
@@ -155,7 +188,7 @@ Everything else waits until the operational log shows a third repetition of a wo
 | 1 | Phase 1 (CLAUDE.md, settings, AGENTS.md slim, CONTRIBUTING fix) | ~1 session | Every future session starts oriented |
 | 2 | Phase 2 hooks (gofmt-gate, generated-file-guard, delivery-gate first) | ~1 session | CI failures caught at edit time |
 | 3 | Phase 4 `/verify-shield` | small | Matrix becomes executable |
-| 4 | Phase 3 agents | ~1 session | Clean delegation with evidence |
+| 4 | Phase 3 agents (core three, then extended roster + checkpoint hook) | 1–2 sessions | Clean delegation with evidence, recoverable by design |
 | 5 | Phase 5 evals + log | ongoing | Failures compound into system patches |
 
 Definition of done for the upgrade: a fresh session, given "change X in pkg/scanner and
