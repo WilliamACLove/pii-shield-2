@@ -129,13 +129,25 @@ demand instead of being reinvented in chat.
 - **research-scout** — read-only research (Go/k8s/golangci releases, CVEs affecting
   dependencies) returning short cited digests, never raw dumps.
 
-**Model routing with backup routing**, recorded in `CLAUDE.md` and in each agent's
-frontmatter as tier hints (never hardcoded model IDs — availability changes):
-strongest available model for orchestration and critic passes; mid-tier for builder
-tasks; small/fast for mechanical sweeps (gofmt fixes, doc greps). Every agent also
-names a **fallback tier**, so the team degrades gracefully instead of stalling when
-the preferred model is unavailable (e.g. critic: strongest → mid-tier; builder:
-mid-tier → small).
+**Model routing with backup routing.** Claude Code has no built-in automatic model
+selection, and a subagent cannot switch its own model mid-run — the model is fixed at
+dispatch. The "smart choice" therefore lives in exactly two files:
+
+- *Frontmatter defaults* (`.claude/agents/*.md` `model:` field — accepts aliases like
+  `sonnet`/`opus`/`haiku` or `inherit`): the safe per-agent default when nobody decides
+  otherwise. Use aliases, never hardcoded model IDs — availability changes.
+- *Dispatch-time overrides by the orchestrator*: the Agent tool takes a per-invocation
+  `model` parameter that beats frontmatter. The chief-operator prompt carries the
+  routing table — strongest available model for orchestration and critic passes;
+  mid-tier for builder tasks; small/fast for mechanical sweeps (gofmt fixes, doc
+  greps) — plus an **escalation ladder**: if a cheap tier's output fails qa-verifier,
+  redispatch the same task one tier up instead of retrying at the same tier; if the
+  preferred tier is unavailable, fall back one tier down (e.g. critic: strongest →
+  mid-tier; builder: mid-tier → small) rather than stalling.
+
+One footgun to document in `CLAUDE.md`: the `CLAUDE_CODE_SUBAGENT_MODEL` env var
+silently outranks both frontmatter and per-dispatch overrides — keep it unset in this
+repo's environments or all routing rules become dead letters.
 
 **Backups** — two rules, both enforced by files, so no repair or risky change is
 unrecoverable:
