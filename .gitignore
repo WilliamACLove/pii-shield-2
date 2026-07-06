@@ -82,3 +82,6 @@ notes/*
 !docs/operational-runbooks.md
 !docs/sidecar-failure-modes.md
 !docs/operator-stabilization.md
+
+# Agent tooling upgrade plan
+!docs/claude-code-os-upgrade-plan.md
