@@ -182,19 +182,21 @@ The $970/acre gap between the gross- and tillable-acre prices ($10,345 − $9,37
 Illinois farmland property-tax assessment is not based on market sales comparison — it is a *statutorily codified* V = NOI/r calculation, distinct from (and generally far below) market value:
 
 ```
-AEV_i         = NetIncome5yr_i / CapRate5yr
+AEV_i           = NetIncome5yr_i / CapRate5yr
 AssessedValue_i = 0.3333 × AEV_i
-CapRate5yr    = clamp(BaseRate + 3 percentage points, floor 8%, ceiling 10%)   [under P.A. 104-0468]
 
-i             = soil productivity index (PI) class, on the Dept. of Revenue's 82-132 assessment scale
+i              = soil productivity index (PI) class, on the Dept. of Revenue's 82-132 assessment scale
 NetIncome5yr_i = 5-year average certified net income to land for soil PI class i,
                  certified by the Farmland Assessment Technical Advisory Board (FATAB)
 CapRate5yr     = 5-year moving average of the Federal Land Bank (Farm Credit) farmland
-                 mortgage interest rate, subject to the statutory floor/ceiling
+                 mortgage interest rate (the certified published rate: 4.83% AY2025, 5.27% AY2026)
 AssessedValue_i = equalized assessed value per acre for property-tax purposes
                   (33.33% is Illinois's general assessment ratio), subject to a
-                  statutory cap limiting year-over-year change to 10% per soil PI
+                  statutory cap limiting year-over-year change to 10% of the prior-year
+                  median-cropped-soil (PI 111) certified value (P.A. 98-0109)
 ```
+
+**Unresolved: the P.A. 104-0468 cap-rate "guardrails."** Secondary coverage (farmweeknow.com) of Public Act 104-0468 describes new guardrails on the capitalization rate — "three percentage points added to the published rate, with a floor of 8% and a ceiling of 10%." Read together with the certified published rates, that would imply an *effective* divisor of 8.00% for a 4.83% published rate (7.83% floored to 8%) and 8.27% for a 5.27% published rate — materially lowering AEVs relative to dividing by the raw published rate. However, the act's text, its effective assessment year, and how it interacts with the IDOR certified-values documents (which state the 4.83%/5.27% figures without an adjusted rate) could **not** be reconciled against a primary source at build time — the two readings are reported side by side here per `../SOURCING.md` rule 6, and the worked example below uses the certified published rate as stated in the IDOR document. Resolve against the statute and the current IDOR Publication 122 before relying on either mechanic. See [10-tax-and-assessment.md](10-tax-and-assessment.md) for the full assessment procedure.
 
 *Source: 35 ILCS 200/10-115 et seq. (Illinois Compiled Statutes, Property Tax Code); Illinois Department of Revenue, "Glossaries and Formulas" ([PDF](https://tax.illinois.gov/content/dam/soi/en/web/tax/localgovernments/property/documents/glossayformulas.pdf)); capitalization-rate floor/ceiling added by Public Act 104-0468. Verified: the AEV/cap-rate structure and the P.A. 104-0468 guardrails (base rate + 3 points, floor 8%, ceiling 10%) were independently confirmed via multiple search passes; the certified 5-year capitalization rate for assessment year 2026 is **5.27%**, up from **4.83%** for assessment year 2025 (Illinois Dept. of Revenue, *Certified Values for Assessment Year 2026*, [PDF](https://tax.illinois.gov/content/dam/soi/en/web/tax/localgovernments/property/documents/2026-farmland-certified-values.pdf); *Certified Values for Assessment Year 2025*, [PDF](https://tax.illinois.gov/content/dam/soi/en/web/tax/localgovernments/property/documents/2025-farmland-certified-values.pdf)). The exact statutory text of 35 ILCS 200/10-115 and FATAB's net-income certification methodology could not be read directly from ilga.gov in this build — full statutory language should be pulled and quoted verbatim in a follow-up pass. See [10-tax-and-assessment.md](10-tax-and-assessment.md) for the full property-tax assessment procedure and the 10%-per-PI change cap in context.*
 
