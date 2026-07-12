@@ -15,7 +15,14 @@ Every document in this knowledge base follows these rules. If you extend the kno
 4. **Different measurement systems are never mixed silently.** NASS survey values, ISPFMRA expert-opinion values by land class, and actual transaction prices measure different things and diverge systematically. Documents state which system a number comes from.
 5. **Formulas state every variable.** A formula is only included with definitions for each term, its source, and (where useful) a worked example using realistic Illinois numbers.
 6. **Disagreements between sources are reported, not resolved silently.** When NASS and ISPFMRA (or two other sources) disagree, both numbers appear with an explanation of why they differ.
-7. **Verification status.** Claims in this knowledge base were independently re-checked against primary sources at build time. Where a claim could not be verified against a reachable primary source, it is marked as such in the text.
+7. **Verification status.** Claims in this knowledge base were independently re-checked by a second research pass at build time. Where a claim could not be verified, it is marked as such in the text.
+
+## Build-environment disclosure
+
+This knowledge base was assembled in an environment whose network policy **blocked direct fetching of source pages and PDFs**; research and verification relied on a hosted web-search service (which returns page content in results) rather than opening each primary document directly. Consequences:
+
+- `sources/MANIFEST.md` lists every primary document with its exact URL, publisher, and vintage, but **archival copies could not be downloaded**. A follow-up session with network access to the domains listed in the manifest should fetch, verify (`file`/`pdftotext`), and checksum each document to complete the archive.
+- Numbers herein should be treated as *well-sourced but not document-confirmed* until that archival pass runs. Claims that the verification pass could not confirm are flagged inline.
 
 ## Known limitations of the underlying sources
 
